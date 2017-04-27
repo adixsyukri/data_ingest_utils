@@ -1,0 +1,81 @@
+<workflow-app name="I-MOVE-CURRENT-RAW-${source_name}-${table}"
+	xmlns="uri:oozie:workflow:0.5">
+   <parameters>
+        <property>
+            <name>prefix</name>
+            <value>/user/trace/development/</value>
+        </property>
+        <property>
+            <name>stagingdb</name>
+            <value>staging_dev</value>
+        </property>
+        <property>
+            <name>targetdb</name>
+            <value>${source_name}_dev</value>
+        </property>
+        <property>
+            <name>outputdir</name>
+            <value>${prefix}/source/${source_name}/${table}/</value>
+        </property>
+        <property>
+            <name>sourcedir</name>
+            <value>${prefix}/source_files/${source_name}/${table}/</value>
+        </property>
+        <property>
+            <name>staging_tbl</name>
+            <value>${source_name}_${schema}_${table}</value>
+         </property>
+        <property>
+            <name>reconcile</name>
+            <value>append</value>
+         </property>
+   </parameters>
+
+	<start to="getDates"/>
+	<action name="getDates">
+		<shell
+			xmlns="uri:oozie:shell-action:0.3">
+			<job-tracker>${resourceManager}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<exec>python</exec>
+			<argument>date_helper.py</argument>
+			<file>date_helper.py</file>
+			<capture-output/>
+		</shell>
+		<ok to="RemoveCurrent"/>
+		<error to="kill"/>
+	</action>
+	<action name="RemoveCurrent">
+		<fs>
+			<name-node>${nameNode}</name-node>
+			<delete path="${nameNode}/${sourcedir}/RAW/PREVIOUS"></delete>
+			<move source="${nameNode}/${sourcedir}/RAW/CURRENT" target="${nameNode}/${sourcedir}/RAW/PREVIOUS"></move>
+		</fs>
+		<ok to="CopyToCurrent"/>
+		<error to="kill"/>
+	</action>
+	<action name="CopyToCurrent">
+		<distcp
+			xmlns="uri:oozie:distcp-action:0.2">
+			<job-tracker>${resourceManager}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<arg>-Dmapreduce.job.queuename=distcp</arg>
+			<arg>${nameNode}/${sourcedir}/RAW/ingest_date=${wf:actionData('getDates')['DATE']}</arg>
+			<arg>${nameNode}/${sourcedir}/RAW/CURRENT</arg>
+		</distcp>
+		<ok to="end"/>
+		<error to="revertCurrent"/>
+	</action>
+	<action name="revertCurrent">
+		<fs>
+			<name-node>${nameNode}</name-node>
+			<move source="${nameNode}/${sourcedir}/RAW/PREVIOUS" target="${nameNode}/${sourcedir}/RAW/CURRENT"></move>
+		</fs>
+		<ok to="end"/>
+		<error to="kill"/>
+	</action>
+	<kill name="kill">
+		<message>${wf:errorMessage(wf:lastErrorNode())}</message>
+	</kill>
+	<end name="end"/>
+</workflow-app>

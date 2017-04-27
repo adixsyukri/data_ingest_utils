@@ -123,6 +123,7 @@ oozie_properties = OrderedDict([
     ('targetdb', None),
     ('stagingdb', None),
     ('backdate', '7'),
+    ('retention', '7'),
     ('schema', None),
     ('table', None),
     ('mapper', None),
@@ -180,6 +181,9 @@ PROCESSES = {
     },
     'incremental-ingest-frozen': {
         'workflow': 'incremental-ingest-frozen',
+    },
+    'data-retention-hdfs': {
+        'workflow': 'data-retention-hdfs',
     }
 }
 
@@ -188,37 +192,43 @@ EXEC_TIME = {
         'ingest-full': '00:01',
         'ingest-increment': '00:01',
         'transform-full': '00:30',
-        'transform-increment': '00:30'
+        'transform-increment': '00:30',
+        'data-retention-hdfs': '14:30'
     },
     'SIEBEL_NOVA': {
         'ingest-full': '03:00',
         'ingest-increment': '03:00',
         'transform-full': '05:00',
-        'transform-increment': '05:00'
+        'transform-increment': '05:00',
+        'data-retention-hdfs': '14:30'
     },
     'BRM_NOVA': {
         'ingest-full': '03:01',
         'ingest-increment': '03:01',
         'transform-full': '05:00',
-        'transform-increment': '05:00'
+        'transform-increment': '05:00',
+        'data-retention-hdfs': '14:30'
     },
     'GRANITE': {
         'ingest-full': '03:01',
         'ingest-increment': '03:01',
         'transform-full': '05:00',
-        'transform-increment': '05:00'
+        'transform-increment': '05:00',
+        'data-retention-hdfs': '14:30'
     },
     'NIS': {
         'ingest-full': '03:01',
         'ingest-increment': '03:01',
         'transform-full': '05:00',
-        'transform-increment': '05:00'
+        'transform-increment': '05:00',
+        'data-retention-hdfs': '14:30'
     },
     'PORTAL': {
         'ingest-full': '03:01',
         'ingest-increment': '03:01',
         'transform-full': '05:00',
-        'transform-increment': '05:00'
+        'transform-increment': '05:00',
+        'data-retention-hdfs': '14:30'
     }
 }
 
@@ -227,13 +237,13 @@ FEEDS = {
        'path': '%(prefix)s/source/%(source_name)s/%(schema)s_%(table)s/ingest_date=${YEAR}-${MONTH}-${DAY}',
        'format': 'parquet',
        'exec_time': '00:00',
-       'retention': 365
+       'retention': 7
    },
    'increment-retention': {
         'path': '%(prefix)s/source/%(source_name)s/%(schema)s_%(table)s/INCREMENT/ingest_date=${YEAR}-${MONTH}-${DAY}',
         'format': 'parquet',
         'exec_time': '00:00',
-        'retention': 365
+        'retention': 7
    },
    'full': {
        'path': '%(prefix)s/source/%(source_name)s/%(schema)s_%(table)s/CURRENT/',
