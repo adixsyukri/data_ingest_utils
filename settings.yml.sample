@@ -1,0 +1,4 @@
+yarn:
+  hostname: <<hostnamehere>>
+  cluster: <<clusternamehere>>
+  queue: <<queuename>>
